@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 
+import { CreateEventModal } from "@/components/events/CreateEventModal";
 // Data Types
 interface Event {
   id: string;
@@ -154,7 +155,9 @@ const Events = () => {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input placeholder="Search events..." className="pl-10 h-11" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+          <CreateEventModal onEventCreated={fetchEvents} />
         </div>
+        
         <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
           {categories.map((category) => (
             <Button

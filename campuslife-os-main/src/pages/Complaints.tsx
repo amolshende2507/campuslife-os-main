@@ -22,6 +22,7 @@ import {
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AdminComplaintView } from "@/components/dashboard/AdminComplaintView";
 
 // Database Shape
 interface Complaint {
@@ -42,6 +43,7 @@ const categories = [
 const Complaints = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { profile } = useAuth(); 
 
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,7 @@ const Complaints = () => {
   useEffect(() => {
     if (user) fetchMyComplaints();
   }, [user]);
+  
 
   // 1. Fetch My Complaints
   const fetchMyComplaints = async () => {
@@ -135,6 +138,14 @@ const Complaints = () => {
       default: return "Submitted";
     }
   };
+
+  if (profile?.role === 'college_admin') {
+    return (
+      <DashboardLayout>
+        <AdminComplaintView />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
