@@ -3,380 +3,288 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   MessageSquare,
   Shield,
-  Upload,
   Clock,
   CheckCircle2,
   AlertCircle,
   Plus,
   Lock,
   PartyPopper,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
 
-const categories = [
-  "Infrastructure",
-  "Academics",
-  "Hostel",
-  "Canteen",
-  "Library",
-  "Transport",
-  "Faculty",
-  "Other",
-];
+// Database Shape
+interface Complaint {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  status: 'submitted' | 'in_review' | 'resolved' | 'closed';
+  is_anonymous: boolean;
+  submitted_at: string;
+  resolved_at: string | null;
+}
 
-const myComplaints = [
-  {
-    id: "CMP-2024-001",
-    title: "Water dispenser not working in Block B",
-    category: "Infrastructure",
-    status: "resolved",
-    date: "Jan 10, 2024",
-    timeline: [
-      { status: "Submitted", date: "Jan 10, 2024", done: true },
-      { status: "In Review", date: "Jan 11, 2024", done: true },
-      { status: "Resolved", date: "Jan 13, 2024", done: true },
-    ],
-  },
-  {
-    id: "CMP-2024-002",
-    title: "Wifi connectivity issues in library",
-    category: "Infrastructure",
-    status: "in_review",
-    date: "Jan 14, 2024",
-    timeline: [
-      { status: "Submitted", date: "Jan 14, 2024", done: true },
-      { status: "In Review", date: "Jan 15, 2024", done: true },
-      { status: "Resolved", date: "", done: false },
-    ],
-  },
+const categories = [
+  "Infrastructure", "Academics", "Hostel", "Canteen", "Library", "Transport", "Faculty", "Other"
 ];
 
 const Complaints = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowForm(false);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 4000);
+  // Form State
+  const [formData, setFormData] = useState({
+    category: "",
+    title: "",
+    description: "",
+    isAnonymous: true // Default to safe
+  });
+
+  useEffect(() => {
+    if (user) fetchMyComplaints();
+  }, [user]);
+
+  // 1. Fetch My Complaints
+  const fetchMyComplaints = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .eq('student_id', user!.id)
+        .order('submitted_at', { ascending: false });
+
+      if (error) throw error;
+      setComplaints(data || []);
+    } catch (error: any) {
+      console.error("Error fetching complaints:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 2. Submit Logic
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.category || !formData.title || !formData.description) {
+      toast({ variant: "destructive", title: "Missing fields", description: "Please fill in all details." });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const { error } = await supabase.from('complaints').insert({
+        student_id: user!.id,
+        category: formData.category,
+        title: formData.title,
+        description: formData.description,
+        is_anonymous: formData.isAnonymous,
+        status: 'submitted'
+      });
+
+      if (error) throw error;
+
+      // Success UI
+      setShowForm(false);
+      setShowSuccess(true);
+      setFormData({ category: "", title: "", description: "", isAnonymous: true }); // Reset
+      fetchMyComplaints(); // Refresh list
+
+      setTimeout(() => setShowSuccess(false), 5000); // Hide success confetti after 5s
+
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Submission Failed", description: error.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Helper for Status Colors
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "resolved":
-        return "bg-accent/10 text-accent border border-accent/20";
-      case "in_review":
-        return "bg-primary/10 text-primary border border-primary/20";
-      default:
-        return "bg-muted text-muted-foreground";
+      case "resolved": return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+      case "in_review": return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+      case "closed": return "bg-gray-500/10 text-gray-600 border-gray-500/20";
+      default: return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20";
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "resolved":
-        return "✓ Resolved";
-      case "in_review":
-        return "In Review";
-      default:
-        return "Submitted";
+      case "resolved": return "✓ Resolved";
+      case "in_review": return "In Review";
+      case "closed": return "Closed";
+      default: return "Submitted";
     }
   };
 
   return (
     <DashboardLayout>
-      {/* Success Toast */}
+      {/* Success Confetti Toast */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div
             initial={{ opacity: 0, y: -50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            className="fixed top-4 right-4 z-50 bg-accent text-accent-foreground rounded-2xl p-4 shadow-xl flex items-center gap-3"
+            className="fixed top-24 right-4 z-50 bg-emerald-600 text-white rounded-2xl p-4 shadow-xl flex items-center gap-3"
           >
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
               <PartyPopper className="w-5 h-5" />
             </div>
             <div>
               <p className="font-semibold">Complaint Submitted!</p>
-              <p className="text-sm opacity-90">Your identity is safely protected 🔒</p>
+              <p className="text-sm opacity-90">Your identity is protected 🔒</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Anonymous Complaints</h1>
-        <p className="text-muted-foreground">
-          Report issues safely. Your identity is always protected 🔒
-        </p>
+        <p className="text-muted-foreground">Report issues safely. We've got your back.</p>
       </motion.div>
 
-      {/* Privacy Notice */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 rounded-2xl p-6 mb-8 border border-primary/20 relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
-        
+      {/* Privacy Banner */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 rounded-2xl p-6 mb-8 border border-primary/20 relative overflow-hidden">
         <div className="flex items-start gap-4 relative">
-          <motion.div 
-            animate={{ rotate: [0, -5, 5, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg"
-          >
-            <Shield className="w-7 h-7 text-white" />
-          </motion.div>
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg">
+            <Shield className="w-6 h-6 text-white" />
+          </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-lg">100% Anonymous & Confidential</h3>
-              <Lock className="w-4 h-4 text-accent" />
+              <h3 className="font-bold text-lg">100% Anonymous & Secure</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your identity will <span className="font-semibold text-foreground">never</span> be shared with anyone. 
-              All complaints are end-to-end encrypted and handled with complete confidentiality. 
-              Track your complaint using the unique ID provided.
+              When you select "Anonymous", your name is hidden from the committee members viewing the complaint. Only the unique Complaint ID is visible.
             </p>
           </div>
         </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Submit Complaint */}
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card rounded-2xl border border-border/50 p-6"
-        >
+        {/* Form Section */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-card rounded-2xl border border-border/50 p-6 h-fit">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold">Submit a Complaint</h2>
             {!showForm && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={() => setShowForm(true)}
-                  className="btn-press"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  New Complaint
-                </Button>
-              </motion.div>
+              <Button variant="hero" size="sm" onClick={() => setShowForm(true)}>
+                <Plus className="w-4 h-4 mr-1" /> New Complaint
+              </Button>
             )}
           </div>
 
           <AnimatePresence mode="wait">
             {showForm ? (
-              <motion.form 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-                onSubmit={handleSubmit}
-              >
+              <motion.form initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-4" onSubmit={handleSubmit}>
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
+                  <Label>Category</Label>
+                  <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
+                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category.toLowerCase()}>
-                          {category}
-                        </SelectItem>
-                      ))}
+                      {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    placeholder="Brief description of the issue"
-                    className="h-11"
-                  />
+                  <Label>Title</Label>
+                  <Input placeholder="E.g., Water cooler broken" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Provide details about the issue. Be specific about location, time, and impact."
-                    rows={5}
-                  />
+                  <Label>Description</Label>
+                  <Textarea placeholder="Describe the issue in detail..." rows={4} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Attach Image (Optional)</Label>
-                  <motion.div 
-                    whileHover={{ scale: 1.01, borderColor: "hsl(var(--primary) / 0.5)" }}
-                    className="border-2 border-dashed border-border rounded-xl p-8 text-center transition-colors cursor-pointer"
-                  >
-                    <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Click to upload or drag and drop
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PNG, JPG up to 5MB
-                    </p>
-                  </motion.div>
+                <div className="flex items-center gap-2 py-2">
+                  <input type="checkbox" id="anon" checked={formData.isAnonymous} onChange={(e) => setFormData({...formData, isAnonymous: e.target.checked})} className="w-4 h-4 rounded border-primary text-primary focus:ring-primary" />
+                  <Label htmlFor="anon" className="cursor-pointer flex items-center gap-1">
+                     Keep me Anonymous <Lock className="w-3 h-3 text-muted-foreground" />
+                  </Label>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 btn-press"
-                    onClick={() => setShowForm(false)}
-                  >
-                    Cancel
+                <div className="flex gap-3 pt-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowForm(false)}>Cancel</Button>
+                  <Button type="submit" variant="hero" className="flex-1" disabled={submitting}>
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Report"}
                   </Button>
-                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button type="submit" variant="hero" className="w-full">
-                      <Shield className="w-4 h-4 mr-2" />
-                      Submit Anonymously
-                    </Button>
-                  </motion.div>
                 </div>
               </motion.form>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8"
-              >
-                <motion.div
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                </motion.div>
-                <h3 className="font-medium mb-2">No complaint in progress</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Click the button above to submit a new complaint
-                </p>
-              </motion.div>
+              <div className="text-center py-10 bg-secondary/20 rounded-xl border border-dashed border-border">
+                <MessageSquare className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">Click 'New Complaint' to start</p>
+              </div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* My Complaints */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-card rounded-2xl border border-border/50 p-6"
-        >
-          <h2 className="text-lg font-semibold mb-6">My Complaints</h2>
+        {/* History Section */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border/50 p-6 min-h-[400px]">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-semibold">My History</h2>
+            <Button variant="ghost" size="icon" onClick={fetchMyComplaints}><RefreshCw className="w-4 h-4" /></Button>
+          </div>
 
-          {myComplaints.length > 0 ? (
-            <div className="space-y-4">
-              {myComplaints.map((complaint, index) => (
-                <motion.div
-                  key={complaint.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  whileHover={{ scale: 1.01 }}
-                  className="p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-all"
-                >
-                  <div className="flex items-start justify-between gap-4 mb-3">
+          {loading ? (
+             <div className="space-y-4">
+               {[1,2,3].map(i => <div key={i} className="h-24 bg-secondary/50 rounded-xl animate-pulse" />)}
+             </div>
+          ) : complaints.length > 0 ? (
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+              {complaints.map((complaint) => (
+                <motion.div key={complaint.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl bg-secondary/30 border border-border/50 hover:bg-secondary/50 transition-all">
+                  <div className="flex items-start justify-between gap-4 mb-2">
                     <div>
                       <h3 className="font-medium mb-1">{complaint.title}</h3>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="px-2 py-0.5 rounded-full bg-muted">
-                          {complaint.category}
-                        </span>
-                        <span className="font-mono">{complaint.id}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-background border">{complaint.category}</span>
+                        <span>• {new Date(complaint.submitted_at).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <motion.span
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        complaint.status
-                      )}`}
-                    >
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(complaint.status)}`}>
                       {getStatusLabel(complaint.status)}
-                    </motion.span>
+                    </span>
                   </div>
-
-                  {/* Timeline */}
-                  <div className="flex items-center gap-2 mt-4">
-                    {complaint.timeline.map((step, i) => (
-                      <div key={i} className="flex items-center">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.5 + i * 0.1 }}
-                          className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                            step.done
-                              ? "bg-accent text-accent-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {step.done ? (
-                            <CheckCircle2 className="w-4 h-4" />
-                          ) : (
-                            <Clock className="w-3 h-3" />
-                          )}
-                        </motion.div>
-                        {i < complaint.timeline.length - 1 && (
-                          <motion.div
-                            initial={{ scaleX: 0 }}
-                            animate={{ scaleX: 1 }}
-                            transition={{ delay: 0.6 + i * 0.1 }}
-                            className={`w-8 h-0.5 origin-left ${
-                              step.done ? "bg-accent" : "bg-muted"
-                            }`}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                    <span>Submitted</span>
-                    <span>In Review</span>
-                    <span>Resolved</span>
+                  
+                  {/* Timeline Visual (Simplified) */}
+                  <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
+                     <div className="flex items-center gap-1 text-primary">
+                        <CheckCircle2 className="w-3 h-3" /> Submitted
+                     </div>
+                     <div className="w-8 h-[1px] bg-border" />
+                     <div className={`flex items-center gap-1 ${complaint.status !== 'submitted' ? 'text-primary' : 'opacity-50'}`}>
+                        <Clock className="w-3 h-3" /> In Review
+                     </div>
+                     <div className="w-8 h-[1px] bg-border" />
+                     <div className={`flex items-center gap-1 ${complaint.status === 'resolved' ? 'text-emerald-600' : 'opacity-50'}`}>
+                        <CheckCircle2 className="w-3 h-3" /> Resolved
+                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
           ) : (
-            <EmptyState 
-              icon={AlertCircle}
-              title="No complaints submitted"
-              description="That's a good sign! 😊 If you ever need to report an issue, we've got you covered."
-              emoji="✨"
-            />
+            <EmptyState icon={AlertCircle} title="No history" description="You haven't submitted any complaints yet." emoji="✨" />
           )}
         </motion.div>
       </div>
