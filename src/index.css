@@ -1,0 +1,274 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 71% 4%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 239 84% 67%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(239, 84%, 67%) 0%, hsl(262, 83%, 58%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(160, 84%, 39%) 0%, hsl(172, 66%, 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(239, 84%, 67%) 0%, hsl(262, 83%, 58%) 50%, hsl(160, 84%, 39%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220, 14%, 96%) 0%, hsl(0, 0%, 100%) 100%);
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+    --shadow-glow: 0 0 40px -10px hsl(239, 84%, 67%, 0.4);
+    --shadow-glow-accent: 0 0 40px -10px hsl(160, 84%, 39%, 0.4);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 224 71% 4%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 239 84% 67%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 71% 7%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 71% 7%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 213 31% 91%;
+
+    --muted: 215 28% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 239 84% 67%;
+
+    --sidebar-background: 224 71% 7%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 28% 17%;
+    --sidebar-accent-foreground: 213 31% 91%;
+    --sidebar-border: 215 28% 17%;
+    --sidebar-ring: 239 84% 67%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-hero);
+  }
+
+  .gradient-primary {
+    background-image: var(--gradient-primary);
+  }
+
+  .gradient-accent {
+    background-image: var(--gradient-accent);
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 ease-out cursor-pointer;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-1.5;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .card-interactive {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .card-interactive:hover {
+    @apply -translate-y-0.5 scale-[1.01];
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card-glow-primary {
+    @apply relative overflow-hidden;
+  }
+
+  .card-glow-primary::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-1 opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
+  }
+
+  .card-glow-primary:hover::before {
+    @apply opacity-100;
+  }
+
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-glow::after {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+  }
+
+  .btn-glow:hover::after {
+    @apply opacity-100;
+  }
+
+  .btn-press {
+    @apply transition-transform duration-100;
+  }
+
+  .btn-press:active {
+    @apply scale-95;
+  }
+
+  .glass {
+    @apply bg-white/80 dark:bg-card/80 backdrop-blur-lg;
+  }
+
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8 py-16 sm:py-24;
+  }
+
+  .container-tight {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .status-badge {
+    @apply px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .status-upcoming {
+    @apply bg-primary/10 text-primary border border-primary/20;
+  }
+
+  .status-today {
+    @apply bg-accent/10 text-accent border border-accent/20 animate-pulse;
+  }
+
+  .status-closed {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .status-registered {
+    @apply bg-accent text-accent-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
