@@ -1,26 +1,29 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase"; // Import Supabase
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast"; // Import Toast
-import { GraduationCap, Mail, Lock, User, Building, Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { GraduationCap, Mail, Lock, User, Building, Eye, EyeOff, Check, Loader2, Users, School } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // State for form fields
+  // States
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    collegeCode: ""
+    collegeCode: "",
+    secretCode: "" // Only for Admins
   });
   
+  const [role, setRole] = useState<"student" | "club_admin" | "college_admin">("student");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,181 +34,176 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
 
+    // 1. Simple Security Check for Roles
+    if (role === 'college_admin' && formData.secretCode !== 'ADMIN123') {
+      toast({ variant: "destructive", title: "Invalid Secret Code", description: "You need the faculty code to sign up as admin." });
+      setLoading(false);
+      return;
+    }
+
+    if (role === 'club_admin' && formData.secretCode !== 'CLUB123') {
+      toast({ variant: "destructive", title: "Invalid Secret Code", description: "You need the club code to sign up as a lead." });
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. Call Supabase Sign Up
-      const { data, error } = await supabase.auth.signUp({
+      // 2. Send Role Metadata to Supabase
+      const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            full_name: formData.name, // This is sent to our SQL trigger
-            college_code: formData.collegeCode
+            full_name: formData.name,
+            college_code: formData.collegeCode,
+            role: role // <--- Sending the selected role to SQL Trigger
           },
         },
       });
 
       if (error) throw error;
 
-      // 2. Success!
       toast({
-        title: "Account created successfully! 🎉",
-        description: "Welcome to CampusLife OS. You have been logged in.",
+        title: "Account created! 🎉",
+        description: `Welcome, ${role === 'student' ? 'Student' : 'Admin'}. Redirecting...`,
       });
 
-      // 3. Redirect to Dashboard
       navigate("/dashboard");
 
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message || "Something went wrong.",
+        description: error.message,
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // ... Keep the existing features array ...
-  const features = [
-    "Unlimited event registrations",
-    "Join and follow clubs",
-    "Anonymous complaint submission",
-    "Personalized announcements",
-  ];
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Visual (Keep as is) */}
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-accent via-accent/90 to-primary items-center justify-center p-12 relative overflow-hidden">
-         {/* ... (Your existing visual code) ... */}
          <div className="relative z-10 text-white max-w-md">
            <div className="w-20 h-20 mb-8 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
             <GraduationCap className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold mb-4">Start your journey today</h2>
+          <p className="text-white/80 mb-6">Join the operating system for your campus life.</p>
           <ul className="space-y-4">
-            {features.map((feature, i) => (
-              <li key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                  <Check className="w-4 h-4" />
-                </div>
-                <span>{feature}</span>
-              </li>
-            ))}
+            <li className="flex items-center gap-3"><Check className="w-4 h-4" /> <span>Unified Campus Dashboard</span></li>
+            <li className="flex items-center gap-3"><Check className="w-4 h-4" /> <span>Event & Club Management</span></li>
+            <li className="flex items-center gap-3"><Check className="w-4 h-4" /> <span>Secure Complaint Redressal</span></li>
           </ul>
          </div>
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="font-bold text-2xl">
-              Campus<span className="text-primary">Life</span> OS
-            </span>
+            <span className="font-bold text-2xl">Campus<span className="text-primary">Life</span> OS</span>
           </Link>
 
-          <h1 className="text-3xl font-bold mb-2">Create your account</h1>
-          <p className="text-muted-foreground mb-8">Join the revolution.</p>
+          <h1 className="text-3xl font-bold mb-2">Create Account</h1>
+          <p className="text-muted-foreground mb-6">Choose your role to get started.</p>
 
-          {/* Form */}
+          {/* ROLE SELECTOR */}
+          <div className="grid grid-cols-3 gap-2 mb-8">
+            <button 
+              type="button"
+              onClick={() => setRole("student")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'student' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-secondary'}`}
+            >
+              <GraduationCap className={`w-6 h-6 ${role === 'student' ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Student</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => setRole("club_admin")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'club_admin' ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-border hover:bg-secondary'}`}
+            >
+              <Users className={`w-6 h-6 ${role === 'club_admin' ? 'text-accent' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Club Lead</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => setRole("college_admin")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'college_admin' ? 'border-destructive bg-destructive/5 ring-1 ring-destructive' : 'border-border hover:bg-secondary'}`}
+            >
+              <School className={`w-6 h-6 ${role === 'college_admin' ? 'text-destructive' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Faculty</span>
+            </button>
+          </div>
+
           <form onSubmit={handleSignup} className="space-y-4">
             {step === 1 ? (
-              <div className="space-y-4 animate-fade-in">
-                <div className="space-y-2">
-                  <Label htmlFor="collegeCode">College Code</Label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="collegeCode"
-                      value={formData.collegeCode}
-                      onChange={handleChange}
-                      placeholder="e.g., COEP2024"
-                      className="pl-10 h-12 uppercase"
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+                
+                {/* Secret Code Field (Only for Admins) */}
+                {role !== 'student' && (
+                  <div className="space-y-2">
+                    <Label className="text-destructive font-semibold">
+                      {role === 'club_admin' ? 'Club Secret Code' : 'Faculty Secret Code'}
+                    </Label>
+                    <Input 
+                      id="secretCode" 
+                      type="password"
+                      value={formData.secretCode} 
+                      onChange={handleChange} 
+                      placeholder={role === 'club_admin' ? "Enter CLUB123" : "Enter ADMIN123"}
+                      className="border-destructive/50 focus-visible:ring-destructive"
                     />
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Rahul Sharma"
-                      className="pl-10 h-12"
-                      required
-                    />
-                  </div>
+                  <Label>Full Name</Label>
+                  <Input id="name" value={formData.name} onChange={handleChange} placeholder="e.g. Rahul Sharma" required />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>College Code</Label>
+                  <Input id="collegeCode" value={formData.collegeCode} onChange={handleChange} placeholder="e.g. COEP2024" className="uppercase" />
                 </div>
 
-                <Button type="button" variant="hero" className="w-full h-12" onClick={() => setStep(2)}>
-                  Continue
-                </Button>
-              </div>
+                <Button type="button" variant="hero" className="w-full" onClick={() => setStep(2)}>Continue</Button>
+              </motion.div>
             ) : (
-              <div className="space-y-4 animate-fade-in">
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="you@college.edu"
-                      className="pl-10 h-12"
-                      required
-                    />
-                  </div>
+                  <Label>Email</Label>
+                  <Input id="email" type="email" value={formData.email} onChange={handleChange} required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label>Password</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Create a strong password"
-                      className="pl-10 pr-10 h-12"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    <Input id="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required className="pr-10" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-muted-foreground">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <Button type="button" variant="outline" className="flex-1 h-12" onClick={() => setStep(1)}>
-                    Back
-                  </Button>
-                  <Button type="submit" variant="hero" className="flex-1 h-12" disabled={loading}>
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                    Create Account
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
+                  <Button type="submit" variant="hero" className="flex-1" disabled={loading}>
+                    {loading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Create Account"}
                   </Button>
                 </div>
-              </div>
+              </motion.div>
             )}
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
+            Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
           </p>
         </div>
       </div>

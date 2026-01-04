@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase"; // Real Supabase Client
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { GraduationCap, Mail, Lock, Eye, EyeOff, Loader2, Users, School } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ const Login = () => {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student"); // Visual only
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -21,19 +22,14 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // 1. Authenticate with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      // 2. Success
-      toast({
-        title: "Welcome back! 👋",
-        description: "You successfully logged in.",
-      });
+      toast({ title: "Welcome back!", description: "Logging you in..." });
       navigate("/dashboard");
 
     } catch (error: any) {
@@ -48,79 +44,81 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
               <GraduationCap className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="font-bold text-2xl">
-              Campus<span className="text-primary">Life</span> OS
-            </span>
+            <span className="font-bold text-2xl">Campus<span className="text-primary">Life</span> OS</span>
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
-          <p className="text-muted-foreground mb-8">Sign in to continue</p>
+          <p className="text-muted-foreground mb-6">Login to your account.</p>
+
+          {/* VISUAL ROLE SELECTOR */}
+          <div className="grid grid-cols-3 gap-2 mb-8">
+            <button 
+              type="button" onClick={() => setRole("student")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'student' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-secondary'}`}
+            >
+              <GraduationCap className={`w-6 h-6 ${role === 'student' ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Student</span>
+            </button>
+            <button 
+              type="button" onClick={() => setRole("club")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'club' ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-border hover:bg-secondary'}`}
+            >
+              <Users className={`w-6 h-6 ${role === 'club' ? 'text-accent' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Club Lead</span>
+            </button>
+            <button 
+              type="button" onClick={() => setRole("faculty")}
+              className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'faculty' ? 'border-destructive bg-destructive/5 ring-1 ring-destructive' : 'border-border hover:bg-secondary'}`}
+            >
+              <School className={`w-6 h-6 ${role === 'faculty' ? 'text-destructive' : 'text-muted-foreground'}`} />
+              <span className="text-xs font-medium">Faculty</span>
+            </button>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label>Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@college.edu"
-                  className="pl-10 h-12"
-                  required
-                />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@college.edu" className="pl-10 h-12" required />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label>Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10 h-12"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="pl-10 pr-10 h-12" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-2.5 text-muted-foreground">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
             <Button type="submit" variant="hero" className="w-full h-12" disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Sign In"}
+              {loading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Sign In"}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
+            Don't have an account? <Link to="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
           </p>
         </div>
       </div>
-      
-      {/* Right Side - Visual (Keep as is) */}
+
+      {/* Right Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary via-primary/90 to-accent items-center justify-center p-12 relative overflow-hidden">
-        {/* ... (Visual code) ... */}
          <div className="relative z-10 text-center text-white max-w-md">
             <h2 className="text-3xl font-bold mb-4">Your campus, simplified.</h2>
+            <p className="text-white/80">Everything you need to manage your academic and social life in one place.</p>
          </div>
       </div>
     </div>
