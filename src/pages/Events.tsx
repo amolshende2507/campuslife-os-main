@@ -229,11 +229,10 @@ const Events = () => {
                   key={event.id}
                   variants={item}
                   layout
-                  className={`bg-card rounded-2xl border overflow-hidden ${
-                    isRegistered
+                  className={`bg-card rounded-2xl border overflow-hidden ${isRegistered
                       ? "border-accent/50"
                       : "border-border/50 hover:shadow-xl"
-                  }`}
+                    }`}
                 >
                   <div className="relative h-48">
                     <img
@@ -327,10 +326,13 @@ const Events = () => {
       )}
 
       {/* Ticket Modal */}
-      <TicketModal
-        event={selectedTicketEvent}
-        onClose={() => setSelectedTicketEvent(null)}
-      />
+      {selectedTicketEvent && (
+        <TicketModal
+          isOpen={!!selectedTicketEvent}
+          onClose={() => setSelectedTicketEvent(null)}
+          event={selectedTicketEvent}
+        />
+      )}
     </DashboardLayout>
   );
 };
