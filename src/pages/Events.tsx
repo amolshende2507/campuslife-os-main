@@ -3,7 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Calendar, Clock, MapPin, Users, Loader2, Check, QrCode } from "lucide-react";
+import {
+  Search,
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Loader2,
+  Check,
+  QrCode,
+  Trash2,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -43,7 +53,7 @@ const item = {
 };
 
 const Events = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -53,7 +63,8 @@ const Events = () => {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTicketEvent, setSelectedTicketEvent] = useState<Event | null>(null);
+  const [selectedTicketEvent, setSelectedTicketEvent] =
+    useState<Event | null>(null);
 
   const categories = ["All", "Tech", "Cultural", "Sports", "Career", "Workshop"];
 
@@ -71,7 +82,7 @@ const Events = () => {
     try {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, clubs ( name )`)
+        .select("*, clubs ( name )")
         .order("date", { ascending: true });
 
       if (error) throw error;
@@ -91,7 +102,6 @@ const Events = () => {
         .eq("student_id", user!.id);
 
       if (error) throw error;
-
       setRegisteredEventIds(data.map((row) => row.event_id));
     } catch (error) {
       console.error("Error fetching registrations:", error);
@@ -129,6 +139,40 @@ const Events = () => {
       });
     } finally {
       setRegisteringId(null);
+    }
+  };
+
+  /* =======================
+     Delete Handler (Club Admin)
+  ======================= */
+  const handleDelete = async (eventId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to cancel this event? This cannot be undone."
+      )
+    )
+      return;
+
+    try {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Event Cancelled",
+        description: "The event has been removed.",
+      });
+
+      fetchEvents();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "You don't have permission to delete this event.",
+      });
     }
   };
 
@@ -179,19 +223,26 @@ const Events = () => {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row gap-4 mb-8"
+        className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8"
       >
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search events..."
-            className="pl-10 h-11"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        {/* Search + Create */}
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+          {/* Search Box */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search events..."
+              className="pl-10 h-11"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Create Event Button */}
           <CreateEventModal onEventCreated={fetchEvents} />
         </div>
 
+        {/* Category Filters */}
         <div className="flex items-center gap-2 overflow-x-auto">
           {categories.map((category) => (
             <Button
@@ -205,6 +256,7 @@ const Events = () => {
           ))}
         </div>
       </motion.div>
+
 
       {/* Grid */}
       {loading ? (
@@ -229,12 +281,10 @@ const Events = () => {
                   key={event.id}
                   variants={item}
                   layout
-                  className={`bg-card rounded-2xl border overflow-hidden ${isRegistered
-                      ? "border-accent/50"
-                      : "border-border/50 hover:shadow-xl"
-                    }`}
+                  className="bg-card rounded-2xl border border-border/50 overflow-hidden hover:shadow-xl"
                 >
-                  <div className="relative h-48">
+                  {/* IMAGE */}
+                  <div className="relative h-48 overflow-hidden">
                     <img
                       src={event.image_url}
                       alt={event.title}
@@ -246,8 +296,23 @@ const Events = () => {
                         <Check className="w-3 h-3" /> Registered
                       </span>
                     )}
+
+                    {/* DELETE BUTTON */}
+                    {profile?.role === "club_admin" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(event.id);
+                        }}
+                        className="absolute top-3 right-3 z-20 p-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg backdrop-blur-sm transition-all shadow-lg"
+                        title="Cancel Event"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
 
+                  {/* CONTENT */}
                   <div className="p-5">
                     <h3 className="font-semibold text-lg mb-1">
                       {event.title}
@@ -275,38 +340,32 @@ const Events = () => {
                         <Users className="w-4 h-4" /> Open to all
                       </div>
 
-                      {/* ✅ UPDATED BUTTON LOGIC */}
-                      <div className="flex gap-2">
-                        {isRegistered ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                            onClick={() => setSelectedTicketEvent(event)}
-                          >
-                            <QrCode className="w-4 h-4 mr-2" />
-                            View Ticket
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="hero"
-                            size="sm"
-                            disabled={
-                              isRegistering || event.status === "closed"
-                            }
-                            onClick={() =>
-                              handleRegister(event.id, event.title)
-                            }
-                            className="min-w-[100px]"
-                          >
-                            {isRegistering ? (
-                              <Loader2 className="animate-spin" />
-                            ) : (
-                              "Register Now"
-                            )}
-                          </Button>
-                        )}
-                      </div>
+                      {isRegistered ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="bg-emerald-100 text-emerald-800"
+                          onClick={() => setSelectedTicketEvent(event)}
+                        >
+                          <QrCode className="w-4 h-4 mr-2" />
+                          View Ticket
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="hero"
+                          size="sm"
+                          disabled={isRegistering}
+                          onClick={() =>
+                            handleRegister(event.id, event.title)
+                          }
+                        >
+                          {isRegistering ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            "Register Now"
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -325,7 +384,6 @@ const Events = () => {
         />
       )}
 
-      {/* Ticket Modal */}
       {selectedTicketEvent && (
         <TicketModal
           isOpen={!!selectedTicketEvent}
