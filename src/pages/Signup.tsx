@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   // States
   const [formData, setFormData] = useState({
     name: "",
@@ -20,7 +20,7 @@ const Signup = () => {
     collegeCode: "",
     secretCode: "" // Only for Admins
   });
-  
+
   const [role, setRole] = useState<"student" | "club_admin" | "college_admin">("student");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,41 +34,52 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Simple Security Check for Roles
+    // 1. Secret Code Checks (Security)
     if (role === 'college_admin' && formData.secretCode !== 'ADMIN123') {
-      toast({ variant: "destructive", title: "Invalid Secret Code", description: "You need the faculty code to sign up as admin." });
+      toast({ variant: "destructive", title: "Security Alert", description: "Invalid Faculty Code." });
       setLoading(false);
       return;
     }
 
     if (role === 'club_admin' && formData.secretCode !== 'CLUB123') {
-      toast({ variant: "destructive", title: "Invalid Secret Code", description: "You need the club code to sign up as a lead." });
+      toast({ variant: "destructive", title: "Security Alert", description: "Invalid Club Code." });
       setLoading(false);
       return;
     }
 
     try {
-      // 2. Send Role Metadata to Supabase
-      const { error } = await supabase.auth.signUp({
+      // 2. Create User in Supabase
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             full_name: formData.name,
             college_code: formData.collegeCode,
-            role: role // <--- Sending the selected role to SQL Trigger
+            role: role // Triggers the SQL function we wrote
           },
         },
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Account created! 🎉",
-        description: `Welcome, ${role === 'student' ? 'Student' : 'Admin'}. Redirecting...`,
-      });
-
-      navigate("/dashboard");
+      // 3. LOGIC CHANGE: Check if email confirmation is required
+      if (data?.user && !data.session) {
+        // Case A: Email Confirmation is ON in Supabase
+        toast({
+          title: "Account Created! 📧",
+          description: "Please check your email to confirm your account before logging in.",
+        });
+        navigate("/login"); // Send them to login page
+      } else {
+        // Case B: Email Confirmation is OFF (Auto-login)
+        // We still redirect to Login to force them to "Enter" the app properly visually
+        toast({
+          title: "Account Created! 🎉",
+          description: "Please sign in with your new credentials.",
+        });
+        navigate("/login");
+      }
 
     } catch (error: any) {
       toast({
@@ -85,8 +96,8 @@ const Signup = () => {
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-accent via-accent/90 to-primary items-center justify-center p-12 relative overflow-hidden">
-         <div className="relative z-10 text-white max-w-md">
-           <div className="w-20 h-20 mb-8 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
+        <div className="relative z-10 text-white max-w-md">
+          <div className="w-20 h-20 mb-8 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center">
             <GraduationCap className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold mb-4">Start your journey today</h2>
@@ -96,7 +107,7 @@ const Signup = () => {
             <li className="flex items-center gap-3"><Check className="w-4 h-4" /> <span>Event & Club Management</span></li>
             <li className="flex items-center gap-3"><Check className="w-4 h-4" /> <span>Secure Complaint Redressal</span></li>
           </ul>
-         </div>
+        </div>
       </div>
 
       {/* Right Side - Form */}
@@ -114,7 +125,7 @@ const Signup = () => {
 
           {/* ROLE SELECTOR */}
           <div className="grid grid-cols-3 gap-2 mb-8">
-            <button 
+            <button
               type="button"
               onClick={() => setRole("student")}
               className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'student' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-secondary'}`}
@@ -123,7 +134,7 @@ const Signup = () => {
               <span className="text-xs font-medium">Student</span>
             </button>
 
-            <button 
+            <button
               type="button"
               onClick={() => setRole("club_admin")}
               className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'club_admin' ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-border hover:bg-secondary'}`}
@@ -132,7 +143,7 @@ const Signup = () => {
               <span className="text-xs font-medium">Club Lead</span>
             </button>
 
-            <button 
+            <button
               type="button"
               onClick={() => setRole("college_admin")}
               className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-2 ${role === 'college_admin' ? 'border-destructive bg-destructive/5 ring-1 ring-destructive' : 'border-border hover:bg-secondary'}`}
@@ -145,18 +156,18 @@ const Signup = () => {
           <form onSubmit={handleSignup} className="space-y-4">
             {step === 1 ? (
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-                
+
                 {/* Secret Code Field (Only for Admins) */}
                 {role !== 'student' && (
                   <div className="space-y-2">
                     <Label className="text-destructive font-semibold">
                       {role === 'club_admin' ? 'Club Secret Code' : 'Faculty Secret Code'}
                     </Label>
-                    <Input 
-                      id="secretCode" 
+                    <Input
+                      id="secretCode"
                       type="password"
-                      value={formData.secretCode} 
-                      onChange={handleChange} 
+                      value={formData.secretCode}
+                      onChange={handleChange}
                       placeholder={role === 'club_admin' ? "Enter CLUB123" : "Enter ADMIN123"}
                       className="border-destructive/50 focus-visible:ring-destructive"
                     />
@@ -167,7 +178,7 @@ const Signup = () => {
                   <Label>Full Name</Label>
                   <Input id="name" value={formData.name} onChange={handleChange} placeholder="e.g. Rahul Sharma" required />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>College Code</Label>
                   <Input id="collegeCode" value={formData.collegeCode} onChange={handleChange} placeholder="e.g. COEP2024" className="uppercase" />
