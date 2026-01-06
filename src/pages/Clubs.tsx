@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { CreateClubModal } from "@/components/clubs/CreateClubModal";
+import { ManageMembersModal } from "@/components/clubs/ManageMembersModal"; // ✅ NEW
 
 interface Club {
   id: string;
@@ -276,23 +277,31 @@ const Clubs = () => {
                       </div>
                     </div>
 
-                    <Button
-                      variant={isJoined ? "secondary" : "hero"}
-                      size="sm"
-                      className="w-full"
-                      disabled={isLoadingAction}
-                      onClick={() =>
-                        handleToggleMembership(club.id, club.name)
-                      }
-                    >
-                      {isLoadingAction ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : isJoined ? (
-                        "Leave"
-                      ) : (
-                        "Join Club"
-                      )}
-                    </Button>
+                    {/* ✅ JOIN / LEAVE + MANAGE MEMBERS */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={isJoined ? "secondary" : "hero"}
+                        size="sm"
+                        className="flex-1"
+                        disabled={isLoadingAction}
+                        onClick={() =>
+                          handleToggleMembership(club.id, club.name)
+                        }
+                      >
+                        {isLoadingAction ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : isJoined ? (
+                          "Leave"
+                        ) : (
+                          "Join Club"
+                        )}
+                      </Button>
+
+                      <ManageMembersModal
+                        clubId={club.id}
+                        clubName={club.name}
+                      />
+                    </div>
                   </div>
                 </motion.div>
               );
