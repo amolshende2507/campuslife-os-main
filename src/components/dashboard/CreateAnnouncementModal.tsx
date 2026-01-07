@@ -34,7 +34,8 @@ export const CreateAnnouncementModal = ({ onCreated }: { onCreated: () => void }
         title: formData.title,
         content: formData.content,
         category: formData.category,
-        author_id: user!.id
+        author_id: user!.id,
+        college_code: profile?.college_code
       });
 
       if (error) throw error;

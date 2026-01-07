@@ -15,7 +15,7 @@ export const CreateClubModal = ({ onCreated }: { onCreated: () => void }) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     full_name: "",
@@ -37,7 +37,8 @@ export const CreateClubModal = ({ onCreated }: { onCreated: () => void }) => {
         full_name: formData.full_name,
         description: formData.description,
         logo_emoji: formData.logo_emoji,
-        primary_theme_color: formData.primary_theme_color
+        primary_theme_color: formData.primary_theme_color,
+        college_code: profile?.college_code
       });
 
       if (error) throw error;
@@ -65,31 +66,31 @@ export const CreateClubModal = ({ onCreated }: { onCreated: () => void }) => {
           <DialogTitle>Register New Club</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          
+
           <div className="grid grid-cols-4 gap-4">
             <div className="col-span-3 space-y-2">
               <Label>Acronym / Short Name</Label>
-              <Input placeholder="e.g. GDSC" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <Input placeholder="e.g. GDSC" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label>Logo</Label>
-              <Input className="text-center text-2xl" placeholder="🛡️" maxLength={2} value={formData.logo_emoji} onChange={e => setFormData({...formData, logo_emoji: e.target.value})} />
+              <Input className="text-center text-2xl" placeholder="🛡️" maxLength={2} value={formData.logo_emoji} onChange={e => setFormData({ ...formData, logo_emoji: e.target.value })} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Full Name</Label>
-            <Input placeholder="e.g. Google Developer Student Clubs" required value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
+            <Input placeholder="e.g. Google Developer Student Clubs" required value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} />
           </div>
 
           <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea placeholder="What is this club about?" required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <Textarea placeholder="What is this club about?" required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
           </div>
 
           <div className="space-y-2">
             <Label>Theme Color</Label>
-            <Select value={formData.primary_theme_color} onValueChange={(val) => setFormData({...formData, primary_theme_color: val})}>
+            <Select value={formData.primary_theme_color} onValueChange={(val) => setFormData({ ...formData, primary_theme_color: val })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="primary">Indigo / Purple (Primary)</SelectItem>

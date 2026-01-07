@@ -28,10 +28,11 @@ export const CreateEventModal = ({
 }: {
   onEventCreated: () => void;
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
 
   const [myAdminClubs, setMyAdminClubs] = useState<
     { id: string; name: string }[]
@@ -91,6 +92,7 @@ export const CreateEventModal = ({
         image_url:
           formData.image_url ||
           "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80",
+        college_code: profile?.college_code,
       });
 
       if (error) throw error;
