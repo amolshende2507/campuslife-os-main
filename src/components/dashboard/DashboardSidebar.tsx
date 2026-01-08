@@ -49,7 +49,7 @@ const DashboardSidebar = () => {
 
   const getInitials = (name: string) =>
     name
-      ?.split(" ")
+      .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
@@ -96,7 +96,7 @@ const DashboardSidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -112,26 +112,22 @@ const DashboardSidebar = () => {
           );
         })}
 
-        {/* NEW: SCANNER LINK (Admins Only) */}
+        {/* SCAN TICKETS (ADMINS) */}
         {(profile?.role === "club_admin" ||
           profile?.role === "college_admin") && (
           <Link
             to="/dashboard/scan"
-            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative text-muted-foreground hover:bg-secondary hover:text-foreground ${
+            className={`flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground ${
               isCollapsed ? "justify-center" : ""
             }`}
           >
-            <QrCode className="w-5 h-5 shrink-0 group-hover:text-primary transition-colors" />
-            {!isCollapsed && (
-              <span className="font-medium whitespace-nowrap">
-                Scan Tickets
-              </span>
-            )}
+            <QrCode className="w-5 h-5 shrink-0" />
+            {!isCollapsed && <span>Scan Tickets</span>}
           </Link>
         )}
       </div>
 
-      {/* BOTTOM */}
+      {/* BOTTOM LINKS */}
       <div className="p-3 border-t border-border/50 space-y-1">
         {bottomItems.map((item) => (
           <Link
@@ -161,16 +157,25 @@ const DashboardSidebar = () => {
         </button>
       </div>
 
-      {/* USER */}
+      {/* USER PROFILE (UPDATED) */}
       <div
         className={`p-4 border-t border-border/50 ${
           isCollapsed ? "flex justify-center" : ""
         }`}
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-accent/20 flex items-center justify-center font-bold text-sm">
-            {getInitials(profile?.full_name || "User")}
+          <div className="w-9 h-9 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-sm shrink-0 border border-accent/20 overflow-hidden">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="User"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              getInitials(profile?.full_name || "User")
+            )}
           </div>
+
           {!isCollapsed && (
             <div>
               <p className="text-sm font-semibold truncate">

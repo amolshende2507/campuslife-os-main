@@ -311,12 +311,41 @@ const Clubs = () => {
       )}
 
       {!loading && filteredClubs.length === 0 && (
-        <EmptyState
-          icon={Users}
-          title="No clubs found"
-          description="Try changing your search filters."
-          emoji="🤔"
-        />
+        <div className="text-center py-12 px-4 border border-dashed rounded-2xl bg-secondary/20">
+          <div className="w-16 h-16 bg-background rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
+            🚀
+          </div>
+          <h3 className="text-xl font-bold mb-2">Why join a club?</h3>
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">
+            Don't just attend college, experience it. Joining a club unlocks:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
+            <div className="p-4 bg-background rounded-xl border">
+              <span className="text-xl mb-2 block">📢</span>
+              <h4 className="font-semibold text-sm">Priority Updates</h4>
+              <p className="text-xs text-muted-foreground">Get announcements before anyone else.</p>
+            </div>
+            <div className="p-4 bg-background rounded-xl border">
+              <span className="text-xl mb-2 block">🎓</span>
+              <h4 className="font-semibold text-sm">Leadership</h4>
+              <p className="text-xs text-muted-foreground">Get promoted to Admin and organize events.</p>
+            </div>
+            <div className="p-4 bg-background rounded-xl border">
+              <span className="text-xl mb-2 block">🤝</span>
+              <h4 className="font-semibold text-sm">Community</h4>
+              <p className="text-xs text-muted-foreground">Find friends who share your specific interests.</p>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="mt-8"
+            onClick={() => setFilter("all")} // Reset filter to show all clubs
+          >
+            Browse All Clubs
+          </Button>
+        </div>
       )}
     </DashboardLayout>
   );
