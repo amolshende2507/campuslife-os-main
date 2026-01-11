@@ -18,6 +18,7 @@ import Announcements from "./pages/Announcements";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import TicketScanner from "./pages/Scanner";
+import LostFound from "./pages/LostFound";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +43,9 @@ const App = () => (
               <Route path="/dashboard/clubs" element={<Clubs />} />
               <Route path="/dashboard/complaints" element={<Complaints />} />
               <Route path="/dashboard/announcements" element={<Announcements />} />
+              <Route path="/dashboard/lost-found" element={<LostFound />} />
               <Route path="/dashboard/scan" element={<TicketScanner />} />
+
               <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
 

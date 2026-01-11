@@ -24,6 +24,7 @@ const menuItems = [
   { icon: Users, label: "Clubs", path: "/dashboard/clubs" },
   { icon: MessageSquare, label: "Complaints", path: "/dashboard/complaints" },
   { icon: Bell, label: "Announcements", path: "/dashboard/announcements" },
+  { icon: Bell, label: "Lost&Found", path: "/dashboard/lost-found" },
 ];
 
 const bottomItems = [
