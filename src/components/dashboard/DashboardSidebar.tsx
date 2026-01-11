@@ -14,6 +14,7 @@ import {
   X,
   QrCode,
   Search,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -26,6 +27,7 @@ const menuItems = [
   { icon: MessageSquare, label: "Complaints", path: "/dashboard/complaints" },
   { icon: Bell, label: "Announcements", path: "/dashboard/announcements" },
   { icon: Search, label: "Lost & Found", path: "/dashboard/lost-found" },
+  { icon: BookOpen, label: "Resources", path: "/dashboard/resources" },
 ];
 
 const bottomItems = [

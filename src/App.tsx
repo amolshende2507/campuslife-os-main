@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import TicketScanner from "./pages/Scanner";
 import LostFound from "./pages/LostFound";
+import Resources from "./pages/Resources";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/dashboard/announcements" element={<Announcements />} />
               <Route path="/dashboard/lost-found" element={<LostFound />} />
               <Route path="/dashboard/scan" element={<TicketScanner />} />
+              <Route path="/dashboard/resources" element={<Resources />} />
 
               <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
