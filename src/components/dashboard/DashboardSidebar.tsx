@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   QrCode,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -24,7 +25,7 @@ const menuItems = [
   { icon: Users, label: "Clubs", path: "/dashboard/clubs" },
   { icon: MessageSquare, label: "Complaints", path: "/dashboard/complaints" },
   { icon: Bell, label: "Announcements", path: "/dashboard/announcements" },
-  { icon: Bell, label: "Lost&Found", path: "/dashboard/lost-found" },
+  { icon: Search, label: "Lost & Found", path: "/dashboard/lost-found" },
 ];
 
 const bottomItems = [
