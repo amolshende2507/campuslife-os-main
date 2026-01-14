@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
+import { GraduationCap } from "lucide-react";
 
 interface AuthContextType {
   session: Session | null;
@@ -23,13 +24,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         setSession(session);
         setUser(session?.user ?? null);
 
         // CRITICAL FIX: Stop loading immediately after getting session.
         // We do NOT wait for the profile fetch to finish.
-        setLoading(false); 
+        setLoading(false);
 
         if (session?.user) {
           fetchProfile(session.user.id); // Run in background
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       // If we just logged in, we might be loading. Stop it now.
       setLoading(false);
 
@@ -87,9 +88,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ session, user, profile, loading, signOut }}>
-      {children}
+      {loading ? (
+        // GLOBAL LOADING SCREEN
+        <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl animate-pulse">
+              <GraduationCap className="w-8 h-8 text-white" />
+            </div>
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <p className="text-sm font-medium text-muted-foreground animate-pulse">
+                Loading Campus...
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
+
 };
 
 export const useAuth = () => {

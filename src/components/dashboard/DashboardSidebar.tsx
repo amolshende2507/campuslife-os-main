@@ -9,8 +9,6 @@ import {
   Settings,
   LogOut,
   GraduationCap,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   X,
   Search,
@@ -44,7 +42,6 @@ const DashboardSidebar = () => {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
 
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -68,36 +65,25 @@ const DashboardSidebar = () => {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card text-card-foreground">
-      {/* ---------- LOGO HEADER ---------- */}
-      <div
-        className={`h-20 flex items-center border-b border-border/50 ${
-          isCollapsed ? "justify-center" : "px-6"
-        }`}
-      >
-        <Link to="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg transition-transform group-hover:scale-105">
+      {/* ---------- LOGO ---------- */}
+      <div className="h-20 flex items-center px-6 border-b border-border/50">
+        <Link to="/dashboard" className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
             <GraduationCap className="w-6 h-6 text-primary-foreground" />
           </div>
-
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col"
-            >
-              <span className="font-bold text-lg leading-none">
-                Campus<span className="text-primary">Life</span>
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                OS
-              </span>
-            </motion.div>
-          )}
+          <div>
+            <span className="font-bold text-lg leading-none">
+              Campus<span className="text-primary">Life</span>
+            </span>
+            <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">
+              OS
+            </span>
+          </div>
         </Link>
       </div>
 
       {/* ---------- NAVIGATION ---------- */}
-      <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
 
@@ -105,25 +91,14 @@ const DashboardSidebar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group relative ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              } ${isCollapsed ? "justify-center" : ""}`}
+              }`}
             >
               <item.icon className="w-5 h-5 shrink-0" />
-
-              {!isCollapsed && (
-                <span className="font-medium whitespace-nowrap">
-                  {item.label}
-                </span>
-              )}
-
-              {isCollapsed && (
-                <div className="absolute left-14 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 border whitespace-nowrap">
-                  {item.label}
-                </div>
-              )}
+              <span className="font-medium">{item.label}</span>
             </Link>
           );
         })}
@@ -132,72 +107,44 @@ const DashboardSidebar = () => {
           profile?.role === "college_admin") && (
           <Link
             to="/dashboard/scan"
-            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-muted-foreground hover:bg-secondary hover:text-foreground ${
-              isCollapsed ? "justify-center" : ""
-            }`}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             <QrCode className="w-5 h-5 shrink-0" />
-            {!isCollapsed && <span className="font-medium">Scan Tickets</span>}
+            <span className="font-medium">Scan Tickets</span>
           </Link>
         )}
-      </div>
+      </nav>
 
-      {/* ---------- BOTTOM SECTION ---------- */}
+      {/* ---------- BOTTOM ACTIONS ---------- */}
       <div className="p-3 border-t border-border/50 space-y-1">
-        {/* Collapse Toggle */}
-        <Button
-          variant="ghost"
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground ${
-            isCollapsed ? "justify-center" : ""
-          }`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronLeft className="w-5 h-5" />
-          )}
-          {!isCollapsed && (
-            <span className="font-medium text-sm">Collapse Menu</span>
-          )}
-        </Button>
-
         {bottomItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-              isCollapsed ? "justify-center" : ""
-            } ${
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
               location.pathname === item.path
                 ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
             <item.icon className="w-5 h-5 shrink-0" />
-            {!isCollapsed && <span className="font-medium">{item.label}</span>}
+            <span className="font-medium">{item.label}</span>
           </Link>
         ))}
 
         <button
           onClick={handleLogout}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive ${
-            isCollapsed ? "justify-center" : ""
-          }`}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut className="w-5 h-5 shrink-0" />
-          {!isCollapsed && <span className="font-medium">Logout</span>}
+          <span className="font-medium">Logout</span>
         </button>
       </div>
 
       {/* ---------- USER PROFILE ---------- */}
-      <div
-        className={`p-4 border-t border-border/50 ${
-          isCollapsed ? "flex justify-center" : ""
-        }`}
-      >
+      <div className="p-4 border-t border-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-sm shrink-0 border border-accent/20 overflow-hidden">
+          <div className="w-9 h-9 rounded-full bg-accent/20 text-accent flex items-center justify-center font-bold text-sm border border-accent/20 overflow-hidden">
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -208,17 +155,14 @@ const DashboardSidebar = () => {
               getInitials(profile?.full_name || "User")
             )}
           </div>
-
-          {!isCollapsed && (
-            <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">
-                {profile?.full_name}
-              </p>
-              <p className="text-xs text-muted-foreground capitalize truncate">
-                {profile?.role?.replace("_", " ") || "Student"}
-              </p>
-            </div>
-          )}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">
+              {profile?.full_name}
+            </p>
+            <p className="text-xs text-muted-foreground capitalize truncate">
+              {profile?.role?.replace("_", " ") || "Student"}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -239,11 +183,7 @@ const DashboardSidebar = () => {
       </div>
 
       {/* DESKTOP SIDEBAR */}
-      <aside
-        className={`fixed left-0 top-0 h-full border-r border-border/50 z-30 hidden lg:block transition-all duration-300 ${
-          isCollapsed ? "w-20" : "w-64"
-        }`}
-      >
+      <aside className="fixed left-0 top-0 h-full w-64 border-r border-border/50 z-30 hidden lg:block">
         <SidebarContent />
       </aside>
 
@@ -263,7 +203,7 @@ const DashboardSidebar = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 h-full w-72 bg-card z-50 lg:hidden shadow-2xl"
+              className="fixed left-0 top-0 h-full w-72 bg-card z-50 shadow-2xl lg:hidden"
             >
               <div className="absolute top-4 right-4">
                 <Button
