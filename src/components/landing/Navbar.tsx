@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, GraduationCap, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext"; // ✅ NEW
 
 const Navbar = () => {
+  const { user } = useAuth(); // ✅ Auth state
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -58,19 +60,41 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* --- DESKTOP AUTH BUTTONS --- */}
+          {/* --- DESKTOP AUTH BUTTONS (DYNAMIC) --- */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" className="font-medium hover:bg-primary/5">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button variant="hero" size="sm" className="group shadow-lg shadow-primary/20">
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard">
+                <Button
+                  variant="hero"
+                  size="sm"
+                  className="shadow-lg shadow-primary/20"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button
+                    variant="ghost"
+                    className="font-medium hover:bg-primary/5"
+                  >
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button
+                    variant="hero"
+                    size="sm"
+                    className="group shadow-lg shadow-primary/20"
+                  >
+                    Get Started
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* --- MOBILE TOGGLE --- */}
@@ -105,20 +129,40 @@ const Navbar = () => {
                   </a>
                 ))}
               </div>
-              
+
               <div className="h-px bg-border/50 my-2" />
-              
+
+              {/* --- MOBILE AUTH BUTTONS (DYNAMIC) --- */}
               <div className="grid gap-3">
-                <Link to="/login" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full justify-center h-11">
-                    Log in
-                  </Button>
-                </Link>
-                <Link to="/signup" onClick={() => setIsOpen(false)}>
-                  <Button variant="hero" className="w-full justify-center h-11">
-                    Get Started Free
-                  </Button>
-                </Link>
+                {user ? (
+                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                    <Button
+                      variant="hero"
+                      className="w-full justify-center h-11"
+                    >
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login" onClick={() => setIsOpen(false)}>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-center h-11"
+                      >
+                        Log in
+                      </Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setIsOpen(false)}>
+                      <Button
+                        variant="hero"
+                        className="w-full justify-center h-11"
+                      >
+                        Get Started Free
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
