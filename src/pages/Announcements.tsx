@@ -1,7 +1,16 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Bell, BookOpen, Building, Calendar, Users, Trash2 } from "lucide-react";
+import {
+  Search,
+  Bell,
+  BookOpen,
+  Building,
+  Calendar,
+  Users,
+  Trash2,
+  FileText,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -14,11 +23,16 @@ const categories = ["All", "Academic", "Events", "Placement", "Facility", "Gener
 // Icons map
 const getIcon = (cat: string) => {
   switch (cat) {
-    case "Academic": return BookOpen;
-    case "Events": return Calendar;
-    case "Facility": return Building;
-    case "Placement": return Users;
-    default: return Bell;
+    case "Academic":
+      return BookOpen;
+    case "Events":
+      return Calendar;
+    case "Facility":
+      return Building;
+    case "Placement":
+      return Users;
+    default:
+      return Bell;
   }
 };
 
@@ -27,7 +41,7 @@ const Announcements = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const { profile } = useAuth(); // ✅ Auth profile
+  const { profile } = useAuth();
 
   useEffect(() => {
     fetchAnnouncements();
@@ -54,7 +68,7 @@ const Announcements = () => {
     return matchesCategory && matchesSearch;
   });
 
-  // ✅ DELETE HANDLER
+  // DELETE HANDLER
   const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this announcement?")) return;
 
@@ -72,7 +86,9 @@ const Announcements = () => {
     <DashboardLayout>
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Announcements</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+            Announcements
+          </h1>
           <p className="text-muted-foreground">
             Latest updates from the campus admin.
           </p>
@@ -92,6 +108,7 @@ const Announcements = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
         <div className="flex items-center gap-2 overflow-x-auto">
           {categories.map((cat) => (
             <Button
@@ -121,34 +138,58 @@ const Announcements = () => {
           <AnimatePresence>
             {filtered.map((item) => {
               const Icon = getIcon(item.category);
+
               return (
                 <motion.div
                   key={item.id}
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-card rounded-2xl border border-border/50 p-6 flex gap-4 relative group"
+                  className="bg-card rounded-2xl border border-border/50 p-6 relative group hover:shadow-md transition-all"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-6 h-6" />
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-lg">{item.title}</h3>
-                      <span className="text-xs px-2 py-0.5 bg-secondary rounded-full">
-                        {item.category}
-                      </span>
+                  <div className="flex items-start gap-4">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 mt-1">
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <p className="text-muted-foreground mb-2">
-                      {item.content}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(item.created_at).toLocaleDateString()}
-                    </p>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Header */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <h3 className="font-bold text-lg leading-tight">
+                          {item.title}
+                        </h3>
+                        <span className="text-xs px-2 py-0.5 bg-secondary rounded-full font-medium text-muted-foreground border">
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      {/* Content (preserves line breaks) */}
+                      <p className="text-muted-foreground text-sm whitespace-pre-wrap leading-relaxed mb-4">
+                        {item.content}
+                      </p>
+
+                      {/* Attachment */}
+                      {item.attachment_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 h-8 bg-secondary/30 hover:bg-secondary text-primary border-primary/20"
+                          onClick={() =>
+                            window.open(item.attachment_url, "_blank")
+                          }
+                        >
+                          <FileText className="w-3 h-3" />
+                          View Attachment
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* ✅ DELETE BUTTON */}
+                  {/* Delete Button */}
                   {profile?.role === "college_admin" && (
                     <button
                       onClick={() => handleDelete(item.id)}
