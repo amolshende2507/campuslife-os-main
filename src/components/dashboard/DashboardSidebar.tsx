@@ -50,7 +50,7 @@ const DashboardSidebar = () => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate("/login");
+    navigate("/");
   };
 
   const getInitials = (name: string) =>

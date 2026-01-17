@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 import TicketScanner from "./pages/Scanner";
 import LostFound from "./pages/LostFound";
 import Resources from "./pages/Resources";
-
+import StaticPage from "./pages/StaticPage";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/p/:type" element={<StaticPage />} />
 
             {/* PROTECTED ROUTES (Has Sidebar via DashboardLayout inside the pages) */}
             <Route element={<ProtectedRoute />}>
