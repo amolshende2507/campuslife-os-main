@@ -4,12 +4,6 @@
 
 CampusLife OS is a full-stack, multi-tenant SaaS platform designed to digitize the chaotic administrative processes of college campuses. It replaces fragmented WhatsApp groups and Google Forms with a unified, role-based dashboard for Students, Club Leaders, and Faculty.
 
-![Project Banner](https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop)
-<!-- You can replace the image above with a screenshot of your actual dashboard later -->
-
-## 🚀 Live Demo
-**[View Live App](https://your-vercel-link-here.app)**
-*(Replace this link after deployment)*
 
 ---
 
