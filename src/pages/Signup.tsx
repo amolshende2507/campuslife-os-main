@@ -27,7 +27,15 @@ const Signup = () => {
   const [step, setStep] = useState(1);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+    let value = e.target.value;
+
+    // 1. DATA NORMALIZATION LOGIC
+    if (e.target.id === "collegeCode") {
+      // Convert to Uppercase AND remove any accidental spaces
+      value = value.toUpperCase().replace(/\s/g, "");
+    }
+
+    setFormData({ ...formData, [e.target.id]: value });
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -164,12 +172,12 @@ const Signup = () => {
                       {role === 'club_admin' ? 'Club Secret Code' : 'Faculty Secret Code'}
                     </Label>
                     <Input
-                      id="secretCode"
-                      type="password"
-                      value={formData.secretCode}
+                      id="secretcode"
+                      value={formData.collegeCode}
                       onChange={handleChange}
-                      placeholder={role === 'club_admin' ? "Enter CLUB123" : "Enter ADMIN123"}
-                      className="border-destructive/50 focus-visible:ring-destructive"
+                      placeholder="e.g. COEP2024"
+                      className="uppercase placeholder:normal-case" // Visual cue
+                      maxLength={10} // Optional: limit length to prevent typos
                     />
                   </div>
                 )}
