@@ -21,6 +21,9 @@ import TicketScanner from "./pages/Scanner";
 import LostFound from "./pages/LostFound";
 import Resources from "./pages/Resources";
 import StaticPage from "./pages/StaticPage";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,11 +39,14 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/p/:type" element={<StaticPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
 
             {/* PROTECTED ROUTES (Has Sidebar via DashboardLayout inside the pages) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              
+
               <Route path="/dashboard/events" element={<Events />} />
               <Route path="/dashboard/clubs" element={<Clubs />} />
               <Route path="/dashboard/complaints" element={<Complaints />} />
