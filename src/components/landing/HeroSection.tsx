@@ -251,7 +251,7 @@ const HeroSection = () => {
             Trusted by Top Campuses
           </p>
           <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            {["MIT", "IIT Bombay", "BITS Pilani", "COEP", "VIT"].map((college) => (
+            {["MIIT", "IITI Bombay", "BITUS Pilani", "CAEP", "WIT"].map((college) => (
               <span
                 key={college}
                 className="text-xl font-bold text-foreground/80"
